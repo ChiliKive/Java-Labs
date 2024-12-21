@@ -1,129 +1,219 @@
 package com.example.cosmo_cats_marketplace.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.example.cosmo_cats_marketplace.domain.Category;
 import com.example.cosmo_cats_marketplace.domain.Product;
-import com.example.cosmo_cats_marketplace.exception.service.*;
-import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import com.example.cosmo_cats_marketplace.entity.CategoryEntity;
+import com.example.cosmo_cats_marketplace.entity.ProductEntity;
+import com.example.cosmo_cats_marketplace.exception.service.ProductAlreadyExistsException;
+import com.example.cosmo_cats_marketplace.exception.service.ProductNotFoundException;
+import com.example.cosmo_cats_marketplace.repository.ProductRepository;
+import com.example.cosmo_cats_marketplace.service.impl.ProductServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-@SpringBootTest
-@DisplayName("Enhanced Product Service Test")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ProductServiceTest {
+@DisplayName("Product Service Tests")
+class ProductServiceImplTest {
 
-    @Autowired
     private ProductService productService;
+    private ProductRepository productRepository;
 
-    private static Long testProductId;
-    private static final String TEST_PRODUCT_NAME = "Zero-Gravity Toy";
-
-    @Test
-    @Order(1)
-    void shouldReturnAllProducts() {
-        List<Product> products = productService.getAllProducts();
-        assertNotNull(products, "The product list should not be null.");
-        assertEquals(3, products.size(), "The size of the product list does not match the expected value.");
+    @BeforeEach
+    void setUp() {
+        productRepository = mock(ProductRepository.class);
+        productService = new ProductServiceImpl(productRepository);
     }
 
     @Test
-    @Order(2)
-    void shouldThrowProductsNotFoundExceptionIfNoProductsExist() {
-        List<Product> products = new ArrayList<>(productService.getAllProducts());
-        products.forEach(product -> productService.deleteProductById(product.getId()));
-
-        assertThrows(ProductsNotFoundException.class, productService::getAllProducts);
-    }
-
-    @Test
-    @Order(3)
+    @DisplayName("Should create a new product successfully")
     void shouldCreateProduct() {
-        Product newProduct = Product.builder()
-                .name(TEST_PRODUCT_NAME)
-                .description("A toy designed for zero-gravity conditions.")
+        Category category = Category.builder().id(1L).name("Test Category").build();
+        Product product = Product.builder()
+                .name("Test Product")
+                .description("Test Description")
                 .price(100.0)
-                .manufacturer("SpaceToys Inc.")
-                .category(Category.builder().id(2L).name("Cosmic Gadgets").build())
+                .manufacturer("Test Manufacturer")
+                .category(category)
                 .build();
 
-        testProductId = productService.createProduct(newProduct);
-        Product createdProduct = productService.getProductById(testProductId);
+        CategoryEntity categoryEntity = new CategoryEntity();
+        categoryEntity.setId(1L);
+        categoryEntity.setName("Test Category");
 
-        assertNotNull(createdProduct, "Created product should not be null.");
-        assertEquals(newProduct.getName(), createdProduct.getName(), "Product names do not match.");
-        assertEquals(newProduct.getDescription(), createdProduct.getDescription(), "Product descriptions do not match.");
-        assertEquals(newProduct.getPrice(), createdProduct.getPrice(), "Product prices do not match.");
-        assertEquals(newProduct.getManufacturer(), createdProduct.getManufacturer(), "Product manufacturers do not match.");
-        assertEquals(newProduct.getCategory(), createdProduct.getCategory(), "Product categories do not match.");
+        ProductEntity savedEntity = ProductEntity.builder()
+                .id(1L)
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .manufacturer(product.getManufacturer())
+                .category(categoryEntity)
+                .build();
+
+        when(productRepository.existsByNameAndCategory(product.getName(), categoryEntity)).thenReturn(false);
+        when(productRepository.save(any(ProductEntity.class))).thenReturn(savedEntity);
+
+        Long createdProductId = productService.createProduct(product);
+
+        assertNotNull(createdProductId, "Product ID should not be null.");
+        assertEquals(1L, createdProductId, "Product ID does not match.");
+        verify(productRepository, times(1)).save(any(ProductEntity.class));
     }
 
     @Test
-    @Order(4)
+    @DisplayName("Should throw ProductAlreadyExistsException when product already exists")
     void shouldThrowProductAlreadyExistsException() {
-        Product duplicateProduct = Product.builder()
-                .name(TEST_PRODUCT_NAME)
-                .description("Duplicate description.")
+        Category category = Category.builder().id(1L).name("Test Category").build();
+        Product product = Product.builder()
+                .name("Duplicate Product")
+                .description("Duplicate Description")
                 .price(120.0)
                 .manufacturer("Duplicate Manufacturer")
-                .category(Category.builder().id(2L).name("Cosmic Gadgets").build())
+                .category(category)
                 .build();
 
-        assertThrows(ProductAlreadyExistsException.class, () -> productService.createProduct(duplicateProduct));
+        CategoryEntity categoryEntity = new CategoryEntity();
+        categoryEntity.setId(1L);
+        categoryEntity.setName("Test Category");
+
+        when(productRepository.existsByNameAndCategory(product.getName(), categoryEntity)).thenReturn(true);
+
+        assertThrows(ProductAlreadyExistsException.class, () -> productService.createProduct(product));
+        verify(productRepository, never()).save(any(ProductEntity.class));
     }
 
     @Test
-    @Order(5)
-    void shouldUpdateProduct() {
-        Product updatedProduct = Product.builder()
-                .id(testProductId)
-                .name("Updated Zero-Gravity Toy")
-                .description("An updated description for zero-gravity conditions.")
-                .price(120.0)
-                .manufacturer("SpaceToys Updated Inc.")
-                .category(Category.builder().id(2L).name("Cosmic Gadgets").build())
+    @DisplayName("Should retrieve all products successfully")
+    void shouldGetAllProducts() {
+        CategoryEntity categoryEntity = new CategoryEntity();
+        categoryEntity.setId(1L);
+        categoryEntity.setName("Test Category");
+
+        ProductEntity product1 = ProductEntity.builder()
+                .id(1L)
+                .name("Product 1")
+                .description("Description 1")
+                .price(50.0)
+                .manufacturer("Manufacturer 1")
+                .category(categoryEntity)
                 .build();
+
+        ProductEntity product2 = ProductEntity.builder()
+                .id(2L)
+                .name("Product 2")
+                .description("Description 2")
+                .price(70.0)
+                .manufacturer("Manufacturer 2")
+                .category(categoryEntity)
+                .build();
+
+        when(productRepository.findAll()).thenReturn(List.of(product1, product2));
+
+        List<Product> products = productService.getAllProducts();
+
+        assertNotNull(products, "Product list should not be null.");
+        assertEquals(2, products.size(), "Product list size does not match.");
+        verify(productRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Should retrieve a product by ID successfully")
+    void shouldGetProductById() {
+        CategoryEntity categoryEntity = new CategoryEntity();
+        categoryEntity.setId(1L);
+        categoryEntity.setName("Test Category");
+
+        ProductEntity productEntity = ProductEntity.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Description")
+                .price(100.0)
+                .manufacturer("Test Manufacturer")
+                .category(categoryEntity)
+                .build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(productEntity));
+
+        Product product = productService.getProductById(1L);
+
+        assertNotNull(product, "Product should not be null.");
+        assertEquals("Test Product", product.getName(), "Product name does not match.");
+    }
+
+    @Test
+    @DisplayName("Should throw ProductNotFoundException when product is not found by ID")
+    void shouldThrowProductNotFoundException() {
+        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(999L));
+    }
+
+    @Test
+    @DisplayName("Should update product successfully")
+    void shouldUpdateProduct() {
+        CategoryEntity categoryEntity = new CategoryEntity();
+        categoryEntity.setId(1L);
+        categoryEntity.setName("Test Category");
+
+        ProductEntity existingProduct = ProductEntity.builder()
+                .id(1L)
+                .name("Old Name")
+                .description("Old Description")
+                .price(80.0)
+                .manufacturer("Old Manufacturer")
+                .category(categoryEntity)
+                .build();
+
+        Product updatedProduct = Product.builder()
+                .id(1L)
+                .name("Updated Name")
+                .description("Updated Description")
+                .price(100.0)
+                .manufacturer("Updated Manufacturer")
+                .category(Category.builder().id(1L).name("Test Category").build())
+                .build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.save(any(ProductEntity.class))).thenReturn(existingProduct);
 
         productService.updateProduct(updatedProduct);
-        Product retrievedProduct = productService.getProductById(testProductId);
 
-        assertNotNull(retrievedProduct, "Updated product should not be null.");
-        assertEquals(updatedProduct.getName(), retrievedProduct.getName(), "Updated product name does not match.");
-        assertEquals(updatedProduct.getDescription(), retrievedProduct.getDescription(), "Updated product description does not match.");
-        assertEquals(updatedProduct.getPrice(), retrievedProduct.getPrice(), "Updated product price does not match.");
-        assertEquals(updatedProduct.getManufacturer(), retrievedProduct.getManufacturer(), "Updated product manufacturer does not match.");
-        assertEquals(updatedProduct.getCategory(), retrievedProduct.getCategory(), "Updated product category does not match.");
+        verify(productRepository, times(1)).save(any(ProductEntity.class));
     }
 
     @Test
-    @Order(6)
+    @DisplayName("Should throw ProductNotFoundException when updating non-existent product")
     void shouldThrowProductNotFoundExceptionOnUpdate() {
-        Product nonExistentProduct = Product.builder()
+        Product product = Product.builder()
                 .id(999L)
                 .name("Non-existent Product")
-                .description("This product does not exist.")
-                .price(50.0)
-                .manufacturer("Unknown")
-                .category(Category.builder().id(3L).name("Other").build())
                 .build();
 
-        assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(nonExistentProduct));
+        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(product));
     }
 
     @Test
-    @Order(7)
+    @DisplayName("Should delete product successfully")
     void shouldDeleteProduct() {
-        productService.deleteProductById(testProductId);
-        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(testProductId));
+        when(productRepository.existsById(1L)).thenReturn(true);
+
+        productService.deleteProductById(1L);
+
+        verify(productRepository, times(1)).deleteById(1L);
     }
 
     @Test
-    @Order(8)
-    void shouldThrowProductNotFoundExceptionForInvalidId() {
-        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(999L));
+    @DisplayName("Should throw ProductNotFoundException when deleting non-existent product")
+    void shouldThrowProductNotFoundExceptionOnDelete() {
+        when(productRepository.existsById(999L)).thenReturn(false);
+
+        assertThrows(ProductNotFoundException.class, () -> productService.deleteProductById(999L));
     }
 }

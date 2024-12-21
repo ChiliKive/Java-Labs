@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.10.xsd">
+
+    <!-- Таблиця категорій -->
+    <changeSet id="1-create-categories" author="author">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="categories"/>
+            </not>
+        </preConditions>
+        <createTable tableName="categories">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблиця клієнтів -->
+    <changeSet id="2-create-customers" author="author">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="customers"/>
+            </not>
+        </preConditions>
+        <createTable tableName="customers">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(500)"/>
+            <column name="phone" type="VARCHAR(20)"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблиця продуктів -->
+    <changeSet id="3-create-products" author="author">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="products"/>
+            </not>
+        </preConditions>
+        <createTable tableName="products">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manufacturer" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_category" referencedTableName="categories" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint columnNames="name,category_id" constraintName="unique_product_in_category" tableName="products"/>
+        <createIndex tableName="products" indexName="idx_product_name">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Таблиця замовлень -->
+    <changeSet id="4-create-orders" author="author">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="orders"/>
+            </not>
+        </preConditions>
+        <createTable tableName="orders">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="customer_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_customer" referencedTableName="customers" referencedColumnNames="id"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблиця зв'язку замовлень і продуктів -->
+    <changeSet id="5-add-order-products-relation" author="author">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="order_products"/>
+            </not>
+        </preConditions>
+        <createTable tableName="order_products">
+            <column name="order_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey columnNames="order_id, product_id" tableName="order_products"/>
+
+        <addForeignKeyConstraint baseTableName="order_products" baseColumnNames="order_id"
+                                 constraintName="fk_order_products_order"
+                                 referencedTableName="orders" referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="order_products" baseColumnNames="product_id"
+                                 constraintName="fk_order_products_product"
+                                 referencedTableName="products" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

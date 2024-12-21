@@ -49,7 +49,22 @@ public class CustomerControllerIT {
 
     @Test
     void shouldReturnAllCustomers() throws Exception {
-        List<Customer> customers = new CustomerServiceImpl().getAllCustomers();
+        List<Customer> customers = List.of(
+                Customer.builder()
+                        .id(1L)
+                        .name("Alice")
+                        .address("123 Main St")
+                        .phone("1234567890")
+                        .email("alice@example.com")
+                        .build(),
+                Customer.builder()
+                        .id(2L)
+                        .name("Bob")
+                        .address("456 Elm St")
+                        .phone("9876543210")
+                        .email("bob@example.com")
+                        .build()
+        );
         CustomerListDto customerListDto = customerMapper.toCustomerListDto(customers);
 
         when(customerService.getAllCustomers()).thenReturn(customers);
@@ -63,7 +78,13 @@ public class CustomerControllerIT {
 
     @Test
     void shouldReturnCustomerById() throws Exception {
-        Customer customer = new CustomerServiceImpl().getAllCustomers().get(0);
+        Customer customer = Customer.builder()
+                .id(1L)
+                .name("Alice")
+                .address("123 Main St")
+                .phone("1234567890")
+                .email("alice@example.com")
+                .build();
 
         when(customerService.getCustomerById(1L)).thenReturn(customer);
 
@@ -77,8 +98,13 @@ public class CustomerControllerIT {
 
     @Test
     void shouldCreateCustomer() throws Exception {
-        CustomerServiceImpl customerServiceMock = new CustomerServiceImpl();
-        Customer newCustomer = customerServiceMock.getAllCustomers().get(0);
+        Customer newCustomer = Customer.builder()
+                .id(1L)
+                .name("Alice")
+                .address("123 Main St")
+                .phone("1234567890")
+                .email("alice@example.com")
+                .build();
         CustomerDto customerDto = customerMapper.toCustomerDto(newCustomer);
 
         when(customerService.createCustomer(any(Customer.class))).thenReturn(newCustomer);
@@ -96,8 +122,13 @@ public class CustomerControllerIT {
 
     @Test
     void shouldUpdateCustomer() throws Exception {
-        CustomerServiceImpl customerServiceMock = new CustomerServiceImpl();
-        Customer existingCustomer = customerServiceMock.getAllCustomers().get(0);
+        Customer existingCustomer = Customer.builder()
+                .id(1L)
+                .name("Alice")
+                .address("123 Main St")
+                .phone("1234567890")
+                .email("alice@example.com")
+                .build();
         Customer updatedCustomer = existingCustomer.toBuilder()
                 .name("Updated Name")
                 .build();
@@ -116,7 +147,6 @@ public class CustomerControllerIT {
                 .andExpect(jsonPath("$.phone").value(updatedCustomer.getPhone()))
                 .andExpect(jsonPath("$.email").value(updatedCustomer.getEmail()));
     }
-
 
     @Test
     void shouldDeleteCustomer() throws Exception {

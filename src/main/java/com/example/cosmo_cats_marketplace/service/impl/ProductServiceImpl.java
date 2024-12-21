@@ -1,126 +1,127 @@
 package com.example.cosmo_cats_marketplace.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-
 import com.example.cosmo_cats_marketplace.domain.Product;
 import com.example.cosmo_cats_marketplace.domain.Category;
-import com.example.cosmo_cats_marketplace.domain.Customer;
-import com.example.cosmo_cats_marketplace.service.CustomerService;
-import com.example.cosmo_cats_marketplace.service.ProductService;
-import com.example.cosmo_cats_marketplace.exception.service.ProductAlreadyExistsException;
+import com.example.cosmo_cats_marketplace.entity.ProductEntity;
+import com.example.cosmo_cats_marketplace.entity.CategoryEntity;
 import com.example.cosmo_cats_marketplace.exception.service.ProductNotFoundException;
-import com.example.cosmo_cats_marketplace.exception.service.ProductsNotFoundException;
-
+import com.example.cosmo_cats_marketplace.exception.service.ProductAlreadyExistsException;
+import com.example.cosmo_cats_marketplace.repository.ProductRepository;
+import com.example.cosmo_cats_marketplace.service.ProductService;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-@Slf4j
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    private final List<Product> products;
+    private final ProductRepository productRepository;
 
-    public ProductServiceImpl(CustomerService customerService){
-        this.products = buildAllProductsMock();
+    @Override
+    @Transactional
+    public Long createProduct(Product product) {
+        CategoryEntity categoryEntity = mapCategoryToEntity(product.getCategory());
+        if (productRepository.existsByNameAndCategory(product.getName(), categoryEntity)) {
+            throw new ProductAlreadyExistsException(product.getName());
+        }
+        ProductEntity entity = mapToEntity(product);
+        ProductEntity savedEntity = productRepository.save(entity);
+        return savedEntity.getId();
     }
 
     @Override
     public List<Product> getAllProducts() {
-        if (products.isEmpty()){
-            throw new ProductsNotFoundException();
+        List<ProductEntity> entities = productRepository.findAll();
+        if (entities.isEmpty()) {
+            log.warn("No products found.");
         }
-        return products;
+        return entities.stream()
+                .map(this::mapToDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Product getProductById(Long id) {
-        return products.stream()
-            .filter(p -> p.getId().equals(id))
-            .findFirst()
-            .orElseThrow(() -> {
-                log.warn("A product with {} id not found in mock.", id);
-                return new ProductNotFoundException(id);
-            });
+        ProductEntity entity = productRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Product with ID {} not found.", id);
+                    return new ProductNotFoundException(id);
+                });
+        return mapToDomain(entity);
     }
 
     @Override
-    public Long createProduct(Product product) {
-        if (products.stream().anyMatch(p -> p.getName().equalsIgnoreCase(product.getName()))) {
-            throw new ProductAlreadyExistsException(product.getName());
-        }
-        Product newProduct = buildProduct(product.toBuilder().id((long) (products.size() + 1)).build());
-        products.add(newProduct);
-        return newProduct.getId();
-    }
-
-    @Override
+    @Transactional
     public void updateProduct(Product product) {
-        Product existingProduct = getProductById(product.getId());
-        if (products.stream().anyMatch(p -> !p.getId().equals(product.getId()) && p.getName().equalsIgnoreCase(product.getName()))) {
+        ProductEntity existingEntity = productRepository.findById(product.getId())
+                .orElseThrow(() -> {
+                    log.warn("Product with ID {} not found.", product.getId());
+                    return new ProductNotFoundException(product.getId());
+                });
+
+        CategoryEntity categoryEntity = mapCategoryToEntity(product.getCategory());
+        if (productRepository.existsByNameAndCategoryAndIdNot(product.getName(), categoryEntity, product.getId())) {
             throw new ProductAlreadyExistsException(product.getName());
         }
-        Product updatedProduct = buildProduct(product.toBuilder().id(existingProduct.getId()).build());
-        products.set(products.indexOf(existingProduct), updatedProduct);
+
+        existingEntity.setName(product.getName());
+        existingEntity.setDescription(product.getDescription());
+        existingEntity.setPrice(product.getPrice());
+        existingEntity.setManufacturer(product.getManufacturer());
+        existingEntity.setCategory(categoryEntity);
+
+        productRepository.save(existingEntity);
     }
 
     @Override
+    @Transactional
     public void deleteProductById(Long productId) {
-        Product product = getProductById(productId);
-        products.remove(product);
+        if (!productRepository.existsById(productId)) {
+            throw new ProductNotFoundException(productId);
+        }
+        productRepository.deleteById(productId);
     }
 
-    private Product buildProduct(Product product) {
-        return product.toBuilder()
-                .name(product.getName())
-                .description(product.getDescription())
-                .price(product.getPrice())
-                .manufacturer(product.getManufacturer())
-                .category(product.getCategory())
+    private Product mapToDomain(ProductEntity entity) {
+        return Product.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .price(entity.getPrice())
+                .manufacturer(entity.getManufacturer())
+                .category(mapCategoryToDomain(entity.getCategory()))
                 .build();
     }
 
-    private List<Product> buildAllProductsMock() {
-        List<Product> products = new ArrayList<>();
+    private ProductEntity mapToEntity(Product product) {
+        ProductEntity entity = new ProductEntity();
+        entity.setName(product.getName());
+        entity.setDescription(product.getDescription());
+        entity.setPrice(product.getPrice());
+        entity.setManufacturer(product.getManufacturer());
+        entity.setCategory(mapCategoryToEntity(product.getCategory()));
+        return entity;
+    }
 
-        Category spaceFood = Category.builder()
-                .id(1L)
-                .name("Space Food Supplies")
+    private Category mapCategoryToDomain(CategoryEntity entity) {
+        if (entity == null) return null;
+        return Category.builder()
+                .id(entity.getId())
+                .name(entity.getName())
                 .build();
-        Category cosmicGadgets = Category.builder()
-                .id(2L)
-                .name("Cosmic Gadgets")
-                .build();
+    }
 
-        products.add(Product.builder()
-                .id(1L)
-                .name("Astronaut Tuna Cans")
-                .description("Premium tuna packed for interstellar expeditions.")
-                .price(20.0)
-                .manufacturer("SpaceFood Industries")
-                .category(spaceFood)
-                .build());
-
-        products.add(Product.builder()
-                .id(2L)
-                .name("Stellar Laser Pointer")
-                .description("A laser pointer designed for entertaining cosmic pets.")
-                .price(35.0)
-                .manufacturer("Gadget Galaxy")
-                .category(cosmicGadgets)
-                .build());
-
-        products.add(Product.builder()
-                .id(3L)
-                .name("Zero-Gravity Pet Suit")
-                .description("Keep your pets safe and stylish in zero gravity.")
-                .price(150.0)
-                .manufacturer("CosmoPet Co.")
-                .category(cosmicGadgets)
-                .build());
-
-        return products;
+    private CategoryEntity mapCategoryToEntity(Category category) {
+        if (category == null) return null;
+        CategoryEntity entity = new CategoryEntity();
+        entity.setId(category.getId());
+        entity.setName(category.getName());
+        return entity;
     }
 }

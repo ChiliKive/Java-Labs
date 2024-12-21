@@ -1,93 +1,90 @@
 package com.example.cosmo_cats_marketplace.service.impl;
 
 import com.example.cosmo_cats_marketplace.domain.Customer;
-import com.example.cosmo_cats_marketplace.service.CustomerService;
+import com.example.cosmo_cats_marketplace.entity.CustomerEntity;
 import com.example.cosmo_cats_marketplace.exception.service.CustomerNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.example.cosmo_cats_marketplace.repository.CustomerRepository;
+import com.example.cosmo_cats_marketplace.service.CustomerService;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
-    private final List<Customer> customers;
-
-    public CustomerServiceImpl() {
-        this.customers = new ArrayList<>(buildAllCustomersMock());
-    }
+    private final CustomerRepository customerRepository;
 
     @Override
-    public Customer getCustomerById(Long id) {
-        return customers.stream()
-                .filter(c -> c.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.warn("Customer with ID {} not found.", id);
-                    return new CustomerNotFoundException(id);
-                });
+    @Transactional
+    public Customer createCustomer(Customer customer) {
+        CustomerEntity customerEntity = new CustomerEntity();
+        customerEntity.setName(customer.getName());
+        customerEntity.setAddress(customer.getAddress());
+        customerEntity.setPhone(customer.getPhone());
+        customerEntity.setEmail(customer.getEmail());
+        CustomerEntity savedEntity = customerRepository.save(customerEntity);
+        return mapToDomain(savedEntity);
     }
 
     @Override
     public List<Customer> getAllCustomers() {
-        if (customers.isEmpty()) {
+        List<CustomerEntity> entities = customerRepository.findAll();
+        if (entities.isEmpty()) {
             log.warn("No customers found.");
         }
-        return new ArrayList<>(customers);
+        return entities.stream()
+                .map(this::mapToDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Customer createCustomer(Customer customer) {
-        Customer newCustomer = buildCustomer(customer.toBuilder()
-                .id((long) (customers.size() + 1))
-                .build());
-        customers.add(newCustomer);
-        return newCustomer;
+    public Customer getCustomerById(Long id) {
+        CustomerEntity entity = customerRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Customer with ID {} not found.", id);
+                    return new CustomerNotFoundException(id);
+                });
+        return mapToDomain(entity);
     }
 
     @Override
+    @Transactional
     public Customer updateCustomer(Long id, Customer customer) {
-        Customer existingCustomer = getCustomerById(id);
-        Customer updatedCustomer = buildCustomer(customer.toBuilder()
-                .id(existingCustomer.getId())
-                .build());
-        customers.set(customers.indexOf(existingCustomer), updatedCustomer);
-        return updatedCustomer;
+        CustomerEntity existingCustomer = customerRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Customer with ID {} not found.", id);
+                    return new CustomerNotFoundException(id);
+                });
+        existingCustomer.setName(customer.getName());
+        existingCustomer.setAddress(customer.getAddress());
+        existingCustomer.setPhone(customer.getPhone());
+        existingCustomer.setEmail(customer.getEmail());
+        CustomerEntity updatedEntity = customerRepository.save(existingCustomer);
+        return mapToDomain(updatedEntity);
     }
 
     @Override
+    @Transactional
     public void deleteCustomer(Long id) {
-        Customer customer = getCustomerById(id);
-        customers.remove(customer);
+        if (!customerRepository.existsById(id)) {
+            throw new CustomerNotFoundException(id);
+        }
+        customerRepository.deleteById(id);
     }
 
-    private Customer buildCustomer(Customer customer) {
-        return customer.toBuilder()
-                .name(customer.getName())
-                .address(customer.getAddress())
-                .phone(customer.getPhone())
-                .email(customer.getEmail())
+    private Customer mapToDomain(CustomerEntity entity) {
+        return Customer.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .address(entity.getAddress())
+                .phone(entity.getPhone())
+                .email(entity.getEmail())
                 .build();
-    }
-
-    private List<Customer> buildAllCustomersMock() {
-        return List.of(
-                Customer.builder()
-                        .id(1L)
-                        .name("Alice Johnson")
-                        .address("789 Nebula Way")
-                        .phone("+12345678901")
-                        .email("alice.johnson@example.com")
-                        .build(),
-                Customer.builder()
-                        .id(2L)
-                        .name("Bob Brown")
-                        .address("321 Meteor Lane")
-                        .phone("+10987654321")
-                        .email("bob.brown@example.com")
-                        .build()
-        );
     }
 }
