@@ -2,6 +2,7 @@ package com.example.cosmo_cats_marketplace.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.example.cosmo_cats_marketplace.AbstractTestcontainers;
 import com.example.cosmo_cats_marketplace.domain.Customer;
 import com.example.cosmo_cats_marketplace.exception.service.CustomerNotFoundException;
 import org.junit.jupiter.api.*;
@@ -12,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-@DisplayName("Enhanced Customer Service Test")
+@DisplayName("Customer Service Test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CustomerServiceTest {
+public class CustomerServiceTest extends AbstractTestcontainers {
 
     @Autowired
     private CustomerService customerService;
@@ -24,14 +25,6 @@ public class CustomerServiceTest {
 
     @Test
     @Order(1)
-    void shouldReturnAllCustomers() {
-        List<Customer> customers = customerService.getAllCustomers();
-        assertNotNull(customers, "The customer list should not be null.");
-        assertEquals(2, customers.size(), "The size of the customer list does not match the expected value.");
-    }
-
-    @Test
-    @Order(2)
     void shouldCreateCustomer() {
         Customer newCustomer = Customer.builder()
                 .name("New Customer")
@@ -44,10 +37,19 @@ public class CustomerServiceTest {
         testCustomerId = createdCustomer.getId();
 
         assertNotNull(createdCustomer, "Created customer should not be null.");
+        assertNotNull(testCustomerId, "Created customer ID should not be null.");
         assertEquals(newCustomer.getName(), createdCustomer.getName(), "Customer names do not match.");
         assertEquals(newCustomer.getAddress(), createdCustomer.getAddress(), "Customer addresses do not match.");
         assertEquals(newCustomer.getPhone(), createdCustomer.getPhone(), "Customer phone numbers do not match.");
         assertEquals(newCustomer.getEmail(), createdCustomer.getEmail(), "Customer emails do not match.");
+    }
+
+    @Test
+    @Order(2)
+    void shouldReturnAllCustomers() {
+        List<Customer> customers = customerService.getAllCustomers();
+        assertNotNull(customers, "The customer list should not be null.");
+        assertEquals(1, customers.size(), "The size of the customer list does not match the expected value.");
     }
 
     @Test
