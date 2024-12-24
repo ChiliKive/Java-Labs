@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,18 +29,21 @@ public class ProductController {
   }
 
   @GetMapping
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<ProductListDto> getAllProducts() {
     ProductListDto products = productMapper.toProductListDto(productService.getAllProducts());
     return ResponseEntity.ok(products);
   }
 
   @GetMapping("/{productId}")
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<ProductDto> getProductById(@PathVariable Long productId) {
     ProductDto product = productMapper.toProductDto(productService.getProductById(productId));
     return ResponseEntity.ok(product);
   }
 
   @PostMapping
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> createProduct(@RequestBody @Valid ProductDto productDto) {
     Long productId = productService.createProduct(productMapper.toProduct(productDto));
     URI location = URI.create(String.format("/api/v1/products/%d", productId));
@@ -49,6 +53,7 @@ public class ProductController {
   }
 
   @PutMapping("/{productId}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> updateProduct(
           @PathVariable Long productId,
           @RequestBody ProductDto productDto) {
@@ -57,6 +62,7 @@ public class ProductController {
   }
 
   @DeleteMapping("/{productId}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> removeProduct(@PathVariable Long productId) {
     productService.deleteProductById(productId);
     return ResponseEntity.noContent().build();
