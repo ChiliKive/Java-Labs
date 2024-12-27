@@ -6,6 +6,7 @@ import com.example.cosmo_cats_marketplace.dto.Customer.CustomerEntry;
 import com.example.cosmo_cats_marketplace.dto.Customer.CustomerListDto;
 import java.util.List;
 
+import com.example.cosmo_cats_marketplace.entity.CustomerEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -25,6 +26,7 @@ public interface CustomerMapper {
   @Mapping(target = "email", source = "email")
   CustomerEntry toCustomerEntry(Customer customer);
 
+  @Mapping(target = "id", ignore = true)
   @Mapping(target = "name", source = "name")
   @Mapping(target = "address", source = "address")
   @Mapping(target = "phone", source = "phone")
@@ -34,6 +36,10 @@ public interface CustomerMapper {
   default CustomerListDto toCustomerListDto(List<Customer> customers) {
     return CustomerListDto.builder().customers(toCustomerEntries(customers)).build();
   }
+
+  Customer toDomain(CustomerEntity entity);
+
+  CustomerEntity toEntity(Customer customer);
 
   List<CustomerEntry> toCustomerEntries(List<Customer> customers);
 }

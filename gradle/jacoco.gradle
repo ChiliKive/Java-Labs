@@ -9,6 +9,11 @@ tasks.register('integrationTest', Test) {
     description = "Defines the test type 'integrationTest' for thin integration test"
 }
 
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
 jacocoTestCoverageVerification {
     description = "Verifies coverage based on defined thresholds on all tests (incl. Unit and Integration))"
     executionData = fileTree(layout.buildDirectory).include("/jacoco/*.exec")
@@ -64,6 +69,7 @@ tasks.register('jacocoIntegrationTestReport', JacocoReport) {
 
 test {
     filter {
+        includeTestsMatching '*Test'
         excludeTestsMatching '*IT'
     }
     finalizedBy jacocoTestReport

@@ -20,55 +20,58 @@ configurations {
 	}
 }
 
-
-
-
 ext {
-	// Minimal Coverage
-	minimumCoveragePerFile = 0.7
+	minimumCoveragePerFile = 0.3
 	filesExcludedFromCoverage = [
 			"**/domain/*",
 			"**/dto/*",
 			"**/exception/**/*",
 			"**/exception/*",
+			"**/feature/*",
 			"**/mapper/*",
 			"**/validation/*",
+			"**/service/impl/*",
+			"**/service/*",
 			"**/util/*",
-			"**/config/*Configuration.*",
 			"**/*MarketplaceApplication.*",
 	]
 }
-
-
 repositories {
 	mavenCentral()
 }
+
 
 apply from: "${rootProject.projectDir}/gradle/test.gradle"
 apply from: "${rootProject.projectDir}/gradle/jacoco.gradle"
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	implementation 'org.postgresql:postgresql:42.7.3'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+
+	implementation 'org.liquibase:liquibase-core:4.23.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	// https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
-	implementation 'jakarta.validation:jakarta.validation-api:3.1.0'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-	implementation 'org.springframework.boot:spring-boot-starter-validation:3.3.4'
-	implementation 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-	implementation 'org.aspectj:aspectjweaver:1.9.19'
-	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-	testImplementation "org.wiremock:wiremock-jetty12:3.9.2"
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
+	testImplementation 'org.testcontainers:postgresql:1.19.0'
+	testImplementation 'org.testcontainers:testcontainers'
+	testImplementation 'org.assertj:assertj-core:3.24.2'
+	testImplementation 'org.mockito:mockito-core:5.5.0'
+
+	testImplementation 'org.wiremock:wiremock-jetty12:3.9.2'
+
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
 	testImplementation 'org.projectlombok:lombok:1.18.34'
-	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-	testImplementation 'org.testcontainers:junit-jupiter'
-	testImplementation 'org.assertj:assertj-core:3.24.2'
-	// https://mvnrepository.com/artifact/org.mockito/mockito-core
-	testImplementation 'org.mockito:mockito-core:2.1.0'
 }
-

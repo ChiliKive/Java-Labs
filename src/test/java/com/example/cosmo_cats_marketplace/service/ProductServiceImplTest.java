@@ -3,7 +3,6 @@ package com.example.cosmo_cats_marketplace.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.example.cosmo_cats_marketplace.AbstractTestcontainers;
 import com.example.cosmo_cats_marketplace.domain.Category;
 import com.example.cosmo_cats_marketplace.domain.Product;
 import com.example.cosmo_cats_marketplace.entity.CategoryEntity;
@@ -19,8 +18,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 
-@DisplayName("Product Service Test")
-class ProductServiceTest extends AbstractTestcontainers {
+@DisplayName("Product Service Tests")
+class ProductServiceImplTest {
 
     private ProductService productService;
     private ProductRepository productRepository;

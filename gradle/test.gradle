@@ -81,10 +81,10 @@ def static retrieveResultMarkdownSymbol(TestResult.ResultType resultType) {
 
 def static retrieveTestType(TestDescriptor descriptor) {
     switch (descriptor.getDisplayName()) {
-        case ~/.*:integrationTest.*/:
+        case ~/.*:IT.*/:
             return "Thin Integration Test"
             break
-        case ~/.*:test.*/:
+        case ~/.*:Test.*/:
             return "Unit Test"
             break
         default:

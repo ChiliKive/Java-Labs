@@ -1,6 +1,8 @@
 package com.example.cosmo_cats_marketplace.service;
 
+import com.example.cosmo_cats_marketplace.AbstractTestcontainers;
 import com.example.cosmo_cats_marketplace.service.impl.CosmoCatsService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,7 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestPropertySource(properties = "feature.cosmoCats.enabled=true")
-public class CosmoCatsFeatureEnabledTest {
+@DisplayName("Cosmo Cats Feature Enabled Test")
+public class CosmoCatsFeatureEnabledTest extends AbstractTestcontainers {
 
     @Autowired
     private CosmoCatsService cosmoCatsService;
