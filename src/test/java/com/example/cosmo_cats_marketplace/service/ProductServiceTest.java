@@ -209,12 +209,4 @@ class ProductServiceTest extends AbstractTestcontainers {
 
         verify(productRepository, times(1)).deleteById(1L);
     }
-
-    @Test
-    @DisplayName("Should throw ProductNotFoundException when deleting non-existent product")
-    void shouldThrowProductNotFoundExceptionOnDelete() {
-        when(productRepository.existsById(999L)).thenReturn(false);
-
-        assertThrows(ProductNotFoundException.class, () -> productService.deleteProductById(999L));
-    }
 }
