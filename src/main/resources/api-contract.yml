@@ -1,0 +1,384 @@
+openapi: 3.0.0
+servers: []
+info:
+  description: This is the API for the intergalactic marketplace.
+  version: "1.0.0"
+  title: Cosmic Cats Intergalactic Marketplace
+tags:
+  - name: customers
+    description: Operations available to every customer
+  - name: products
+    description: Operations available for managing products
+paths:
+  /api/v1/customers:
+    get:
+      tags:
+        - customers
+      summary: Get all customers
+      responses:
+        '200':
+          description: List of all customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '404':
+          description: No customers found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - customers
+      summary: Create a new customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerNoId'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/customers/{id}:
+    get:
+      tags:
+        - customers
+      summary: Get customer by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - customers
+      summary: Update a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerNoId'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - customers
+      summary: Delete a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Customer deleted successfully
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/products:
+    get:
+      tags:
+        - products
+      summary: Get all products
+      responses:
+        '200':
+          description: List of all products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '404':
+          description: No products found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - products
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductNoId'
+      responses:
+        '201':
+          description: Product created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+                example: /api/v1/products/1
+              description: The URI of the created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/products/{productId}:
+    get:
+      tags:
+        - products
+      summary: Get product by ID
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - products
+      summary: Update a product
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductNoId'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - products
+      summary: Delete a product
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Product deleted successfully
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    CustomerNoId:
+      type: object
+      required:
+        - name
+        - address
+        - phone
+        - email
+      properties:
+        name:
+          type: string
+          example: John Doe
+          minLength: 3
+          maxLength: 30
+        address:
+          type: string
+          example: 123 Galaxy Street
+          minLength: 3
+          maxLength: 50
+        phone:
+          type: string
+          example: "+1234567890"
+          pattern: "^\\+?[0-9]{10,15}$"
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+    Customer:
+      type: object
+      required:
+        - id
+        - name
+        - address
+        - phone
+        - email
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: John Doe
+          minLength: 3
+          maxLength: 30
+        address:
+          type: string
+          example: 123 Galaxy Street
+          minLength: 3
+          maxLength: 50
+        phone:
+          type: string
+          example: "+1234567890"
+          pattern: "^\\+?[0-9]{10,15}$"
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+    ProductNoId:
+      type: object
+      required:
+        - name
+        - description
+        - price
+        - category
+      properties:
+        name:
+          type: string
+          example: "Nebula Laser Pointer"
+        description:
+          type: string
+          example: "High-powered laser pointer for cosmic pets."
+        price:
+          type: number
+          format: float
+          example: 35.0
+        category:
+          type: string
+          example: "Cosmic Gadgets"
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - price
+        - category
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Nebula Laser Pointer"
+        description:
+          type: string
+          example: "High-powered laser pointer for cosmic pets."
+        price:
+          type: number
+          format: float
+          example: 35.0
+        category:
+          type: string
+          example: "Cosmic Gadgets"
+    Error:
+      type: object
+      required:
+        - status
+        - error
+        - message
+        - path
+      properties:
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "Not Found"
+        message:
+          type: string
+          example: "The requested resource was not found."
+        path:
+          type: string
+          example: "/api/v1/products"
