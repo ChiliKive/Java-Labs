@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.example.cosmo_cats_marketplace.domain.Order;
-import com.example.cosmo_cats_marketplace.dto.Order.OrderDto;
+import com.example.cosmo_cats_marketplace.dto.order.OrderDto;
 
 @Mapper(componentModel = "spring", uses = ProductMapper.class)
 public interface OrderMapper {

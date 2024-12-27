@@ -7,7 +7,7 @@ import java.util.UUID;
 @Value
 @Builder(toBuilder = true)
 public class Product {
-    Long id;
+    UUID id;
     String name;
     String description;
     Double price;

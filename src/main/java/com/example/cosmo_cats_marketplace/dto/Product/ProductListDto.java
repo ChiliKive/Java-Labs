@@ -1,4 +1,4 @@
-package com.example.cosmo_cats_marketplace.dto.Product;
+package com.example.cosmo_cats_marketplace.dto.product;
 
 import java.util.List;
 import lombok.Builder;

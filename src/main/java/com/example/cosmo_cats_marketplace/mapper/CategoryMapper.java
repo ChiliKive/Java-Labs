@@ -1,7 +1,7 @@
 package com.example.cosmo_cats_marketplace.mapper;
 
 import com.example.cosmo_cats_marketplace.domain.Category;
-import com.example.cosmo_cats_marketplace.dto.Category.CategoryDto;
+import com.example.cosmo_cats_marketplace.dto.category.CategoryDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

@@ -5,6 +5,7 @@ import com.example.cosmo_cats_marketplace.service.CustomerService;
 import com.example.cosmo_cats_marketplace.exception.service.CustomerNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Customer getCustomerById(Long id) {
+    public Customer getCustomerById(UUID id) {
         return customers.stream()
                 .filter(c -> c.getId().equals(id))
                 .findFirst()
@@ -41,14 +42,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer createCustomer(Customer customer) {
         Customer newCustomer = buildCustomer(customer.toBuilder()
-                .id((long) (customers.size() + 1))
+                .id(UUID.randomUUID())
                 .build());
         customers.add(newCustomer);
         return newCustomer;
     }
 
     @Override
-    public Customer updateCustomer(Long id, Customer customer) {
+    public Customer updateCustomer(UUID id, Customer customer) {
         Customer existingCustomer = getCustomerById(id);
         Customer updatedCustomer = buildCustomer(customer.toBuilder()
                 .id(existingCustomer.getId())
@@ -58,7 +59,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void deleteCustomer(Long id) {
+    public void deleteCustomer(UUID id) {
         Customer customer = getCustomerById(id);
         customers.remove(customer);
     }
@@ -75,14 +76,14 @@ public class CustomerServiceImpl implements CustomerService {
     private List<Customer> buildAllCustomersMock() {
         return List.of(
                 Customer.builder()
-                        .id(1L)
+                        .id(UUID.fromString("fb9eb420-0db2-4905-af78-2802486ea617"))
                         .name("Alice Johnson")
                         .address("789 Nebula Way")
                         .phone("+12345678901")
                         .email("alice.johnson@example.com")
                         .build(),
                 Customer.builder()
-                        .id(2L)
+                        .id(UUID.fromString("7b60ddfd-2744-4a84-913e-9e0427498bb0"))
                         .name("Bob Brown")
                         .address("321 Meteor Lane")
                         .phone("+10987654321")

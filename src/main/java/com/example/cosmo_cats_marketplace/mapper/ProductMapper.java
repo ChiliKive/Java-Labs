@@ -1,15 +1,16 @@
 package com.example.cosmo_cats_marketplace.mapper;
 
 import com.example.cosmo_cats_marketplace.domain.Product;
-import com.example.cosmo_cats_marketplace.dto.Product.ProductDto;
-import com.example.cosmo_cats_marketplace.dto.Product.ProductEntry;
-import com.example.cosmo_cats_marketplace.dto.Product.ProductListDto;
+import com.example.cosmo_cats_marketplace.dto.product.ProductDto;
+import com.example.cosmo_cats_marketplace.dto.product.ProductEntry;
+import com.example.cosmo_cats_marketplace.dto.product.ProductListDto;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", uses = CategoryMapper.class)
 public interface ProductMapper {
+  @Mapping(target = "id", source = "id")
   @Mapping(target = "name", source = "name")
   @Mapping(target = "description", source = "description")
   @Mapping(target = "price", source = "price")
@@ -31,6 +32,7 @@ public interface ProductMapper {
 
   List<ProductEntry> toProductEntries(List<Product> product);
 
+  @Mapping(target = "id", source = "id")
   @Mapping(target = "name", source = "name")
   @Mapping(target = "description", source = "description")
   @Mapping(target = "price", source = "price")

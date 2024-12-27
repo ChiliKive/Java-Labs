@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.example.cosmo_cats_marketplace.util.ErrorResponseUtils;
+import com.example.cosmo_cats_marketplace.util.ProblemDetailsUtil;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleCustomerNotFound(
           CustomerNotFoundException ex, WebRequest request) {
     log.warn("Error: Customer not found - {}", ex.getMessage());
-    return ErrorResponseUtils.buildErrorResponse(
+    return ProblemDetailsUtil.buildErrorResponse(
             HttpStatus.NOT_FOUND, "customer-not-found", request, ex.getMessage());
   }
 
@@ -42,7 +42,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleProductNotFound(
           ProductNotFoundException ex, WebRequest request) {
     log.warn("Error: Product not found - {}", ex.getMessage());
-    return ErrorResponseUtils.buildErrorResponse(
+    return ProblemDetailsUtil.buildErrorResponse(
             HttpStatus.NOT_FOUND, "product-not-found", request, ex.getMessage());
   }
 
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleProductsNotFound(
           ProductsNotFoundException ex, WebRequest request) {
     log.warn("Error: Products not found - {}", ex.getMessage());
-    return ErrorResponseUtils.buildErrorResponse(
+    return ProblemDetailsUtil.buildErrorResponse(
             HttpStatus.NOT_FOUND, "products-not-found", request, ex.getMessage());
   }
 
@@ -58,7 +58,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleProductAlreadyExists(
           ProductAlreadyExistsException ex, WebRequest request) {
     log.error("Error: Product already exists - {}", ex.getMessage());
-    return ErrorResponseUtils.buildErrorResponse(
+    return ProblemDetailsUtil.buildErrorResponse(
             HttpStatus.CONFLICT, "product-already-exists", request, ex.getMessage());
   }
 
@@ -116,7 +116,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     String path = request.getDescription(false).replace("uri=", "");
     log.warn("Error: Input params validation failed - {}", ex.getMessage());
     return ResponseEntity.status(BAD_REQUEST)
-            .body(ErrorResponseUtils.buildValidationErrorResponse(validationResponse, path));
+            .body(ProblemDetailsUtil.buildValidationErrorResponse(validationResponse, path));
   }
 
 
@@ -125,14 +125,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleGenericException(
           Exception ex, WebRequest request) {
     log.error("Unexpected error: {}", ex.getMessage(), ex);
-    return ErrorResponseUtils.buildUnexpectedErrorResponse(request, ex.getMessage());
+    return ProblemDetailsUtil.buildUnexpectedErrorResponse(request, ex.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, Object>> handleIllegalArgument(
           IllegalArgumentException ex, WebRequest request) {
     log.warn("Error: Invalid argument - {}", ex.getMessage());
-    return ErrorResponseUtils.buildErrorResponse(
+    return ProblemDetailsUtil.buildErrorResponse(
             HttpStatus.BAD_REQUEST, "invalid-argument", request, ex.getMessage());
   }
 
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleNumberFormatException(
           NumberFormatException ex, WebRequest request) {
     log.warn("Error: Invalid number format - {}", ex.getMessage());
-    return ErrorResponseUtils.buildErrorResponse(
+    return ProblemDetailsUtil.buildErrorResponse(
             HttpStatus.BAD_REQUEST, "invalid-number-format", request, "Invalid number format provided");
   }
 }

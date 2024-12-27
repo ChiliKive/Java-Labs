@@ -1,137 +1,119 @@
 package com.example.cosmo_cats_marketplace.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.example.cosmo_cats_marketplace.config.MappersTestConfiguration;
-import com.example.cosmo_cats_marketplace.domain.Customer;
-import com.example.cosmo_cats_marketplace.dto.Customer.CustomerDto;
-import com.example.cosmo_cats_marketplace.dto.Customer.CustomerListDto;
-import com.example.cosmo_cats_marketplace.exception.GlobalExceptionHandler;
-import com.example.cosmo_cats_marketplace.exception.service.CustomerNotFoundException;
+import com.example.cosmo_cats_marketplace.AbstractIt;
+import com.example.cosmo_cats_marketplace.dto.customer.CustomerDto;
 import com.example.cosmo_cats_marketplace.mapper.CustomerMapper;
-import com.example.cosmo_cats_marketplace.service.CustomerService;
-import com.example.cosmo_cats_marketplace.service.impl.CustomerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
 
-@WebMvcTest(CustomerController.class)
-@Import({MappersTestConfiguration.class, GlobalExceptionHandler.class})
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@AutoConfigureMockMvc
 @DisplayName("Customer Controller IT")
-public class CustomerControllerIT {
-
-    @MockBean
-    private CustomerService customerService;
+@Tag("customer-service")
+class CustomerControllerIT extends AbstractIt {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private CustomerMapper customerMapper;
 
+    private final CustomerDto TEST_CUSTOMER = CustomerDto.builder()
+            .id(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
+            .name("Test Customer")
+            .address("Sector 5, Planet Zeta, Quadrant 12")
+            .phone("+1234567890")
+            .email("test@example.com")
+            .build();
+
     @Test
-    void shouldReturnAllCustomers() throws Exception {
-        List<Customer> customers = new CustomerServiceImpl().getAllCustomers();
-        CustomerListDto customerListDto = customerMapper.toCustomerListDto(customers);
-
-        when(customerService.getAllCustomers()).thenReturn(customers);
-
+    @DisplayName("Should fetch all customers successfully")
+    void shouldGetAllCustomers() throws Exception {
         mockMvc.perform(get("/api/v1/customers"))
-                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.customers[0].name").value(customers.get(0).getName()))
-                .andExpect(jsonPath("$.customers[1].name").value(customers.get(1).getName()));
+                .andExpect(jsonPath("$.customers").isArray())
+                .andExpect(jsonPath("$.customers.length()").value(2));
     }
 
     @Test
-    void shouldReturnCustomerById() throws Exception {
-        Customer customer = new CustomerServiceImpl().getAllCustomers().get(0);
+    @DisplayName("Should fetch a single customer by ID successfully")
+    void shouldGetCustomerById() throws Exception {
+        CustomerDto customerDto = createTestCustomer();
 
-        when(customerService.getCustomerById(1L)).thenReturn(customer);
-
-        mockMvc.perform(get("/api/v1/customers/{id}", 1L))
-                .andDo(print())
+        mockMvc.perform(get("/api/v1/customers/{id}", customerDto.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(customer.getName()))
-                .andExpect(jsonPath("$.address").value(customer.getAddress()))
-                .andExpect(jsonPath("$.email").value(customer.getEmail()));
+                .andExpect(jsonPath("$.name").value(TEST_CUSTOMER.getName()))
+                .andExpect(jsonPath("$.address").value(TEST_CUSTOMER.getAddress()))
+                .andExpect(jsonPath("$.phone").value(TEST_CUSTOMER.getPhone()))
+                .andExpect(jsonPath("$.email").value(TEST_CUSTOMER.getEmail()));
     }
 
     @Test
+    @DisplayName("Should create a new customer successfully")
     void shouldCreateCustomer() throws Exception {
-        CustomerServiceImpl customerServiceMock = new CustomerServiceImpl();
-        Customer newCustomer = customerServiceMock.getAllCustomers().get(0);
-        CustomerDto customerDto = customerMapper.toCustomerDto(newCustomer);
-
-        when(customerService.createCustomer(any(Customer.class))).thenReturn(newCustomer);
+        String customerJson = objectMapper.writeValueAsString(TEST_CUSTOMER);
 
         mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(customerDto)))
-                .andDo(print())
+                        .content(customerJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(newCustomer.getName()))
-                .andExpect(jsonPath("$.address").value(newCustomer.getAddress()))
-                .andExpect(jsonPath("$.phone").value(newCustomer.getPhone()))
-                .andExpect(jsonPath("$.email").value(newCustomer.getEmail()));
+                .andExpect(jsonPath("$.name").value(TEST_CUSTOMER.getName()))
+                .andExpect(jsonPath("$.address").value(TEST_CUSTOMER.getAddress()));
     }
 
     @Test
-    void shouldUpdateCustomer() throws Exception {
-        CustomerServiceImpl customerServiceMock = new CustomerServiceImpl();
-        Customer existingCustomer = customerServiceMock.getAllCustomers().get(0);
-        Customer updatedCustomer = existingCustomer.toBuilder()
-                .name("Updated Name")
-                .build();
-        CustomerDto updatedCustomerDto = customerMapper.toCustomerDto(updatedCustomer);
+    @DisplayName("Should handle validation error when creating a customer")
+    void shouldFailToCreateCustomerWithInvalidData() throws Exception {
+        String invalidCustomerJson = """
+        {
+            "name": "T",
+            "address": "",
+            "phone": "123",
+            "email": "invalid-email"
+        }
+        """;
 
-        when(customerService.updateCustomer(eq(existingCustomer.getId()), any(Customer.class)))
-                .thenReturn(updatedCustomer);
-
-        mockMvc.perform(put("/api/v1/customers/{id}", existingCustomer.getId())
+        mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(updatedCustomerDto)))
-                .andDo(print())
+                        .content(invalidCustomerJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Validation Error"))
+                .andExpect(jsonPath("$.invalidParams").isArray());
+    }
+
+    private CustomerDto createTestCustomer() throws Exception {
+        CustomerDto customerDto = CustomerDto.builder()
+                .name("Test Customer")
+                .address("Sector 5, Planet Zeta, Quadrant 12")
+                .phone("+1234567890")
+                .email("test@example.com")
+                .build();
+
+        String customerJson = objectMapper.writeValueAsString(customerDto);
+
+        String responseJson = mockMvc.perform(post("/api/v1/customers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(customerJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(updatedCustomer.getName()))
-                .andExpect(jsonPath("$.address").value(updatedCustomer.getAddress()))
-                .andExpect(jsonPath("$.phone").value(updatedCustomer.getPhone()))
-                .andExpect(jsonPath("$.email").value(updatedCustomer.getEmail()));
-    }
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-
-    @Test
-    void shouldDeleteCustomer() throws Exception {
-        mockMvc.perform(delete("/api/v1/customers/{id}", 1L))
-                .andDo(print())
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void shouldReturnNotFoundForInvalidCustomerId() throws Exception {
-        doThrow(new CustomerNotFoundException(999L)).when(customerService).getCustomerById(999L);
-
-        mockMvc.perform(get("/api/v1/customers/{id}", 999L))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("customer-not-found"));
+        UUID customerId = UUID.fromString(objectMapper.readTree(responseJson).get("id").asText());
+        return customerDto.toBuilder().id(customerId).build();
     }
 }

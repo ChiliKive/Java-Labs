@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @SpringBootTest
 @DisplayName("Enhanced Product Service Test")
@@ -20,7 +21,7 @@ public class ProductServiceTest {
     @Autowired
     private ProductService productService;
 
-    private static Long testProductId;
+    private static UUID testProductId;
     private static final String TEST_PRODUCT_NAME = "Zero-Gravity Toy";
 
     @Test
@@ -48,7 +49,10 @@ public class ProductServiceTest {
                 .description("A toy designed for zero-gravity conditions.")
                 .price(100.0)
                 .manufacturer("SpaceToys Inc.")
-                .category(Category.builder().id(2L).name("Cosmic Gadgets").build())
+                .category(Category.builder()
+                        .id(UUID.fromString("2aec6e47-eddf-4a84-a100-79ff7156498b"))
+                        .name("Cosmic Gadgets")
+                        .build())
                 .build();
 
         testProductId = productService.createProduct(newProduct);
@@ -70,7 +74,10 @@ public class ProductServiceTest {
                 .description("Duplicate description.")
                 .price(120.0)
                 .manufacturer("Duplicate Manufacturer")
-                .category(Category.builder().id(2L).name("Cosmic Gadgets").build())
+                .category(Category.builder()
+                        .id(UUID.fromString("db084cd0-a00a-40af-8f8b-450a7da69d0c"))
+                        .name("Cosmic Gadgets")
+                        .build())
                 .build();
 
         assertThrows(ProductAlreadyExistsException.class, () -> productService.createProduct(duplicateProduct));
@@ -85,7 +92,10 @@ public class ProductServiceTest {
                 .description("An updated description for zero-gravity conditions.")
                 .price(120.0)
                 .manufacturer("SpaceToys Updated Inc.")
-                .category(Category.builder().id(2L).name("Cosmic Gadgets").build())
+                .category(Category.builder()
+                        .id(UUID.fromString("db084cd0-a00a-40af-8f8b-450a7da69d0c"))
+                        .name("Cosmic Gadgets")
+                        .build())
                 .build();
 
         productService.updateProduct(updatedProduct);
@@ -103,12 +113,15 @@ public class ProductServiceTest {
     @Order(6)
     void shouldThrowProductNotFoundExceptionOnUpdate() {
         Product nonExistentProduct = Product.builder()
-                .id(999L)
+                .id(UUID.randomUUID())
                 .name("Non-existent Product")
                 .description("This product does not exist.")
                 .price(50.0)
                 .manufacturer("Unknown")
-                .category(Category.builder().id(3L).name("Other").build())
+                .category(Category.builder()
+                        .id(UUID.fromString("e4752e9f-5dbb-400d-8d97-d23d69a2a6f1"))
+                        .name("Other")
+                        .build())
                 .build();
 
         assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(nonExistentProduct));
@@ -124,6 +137,6 @@ public class ProductServiceTest {
     @Test
     @Order(8)
     void shouldThrowProductNotFoundExceptionForInvalidId() {
-        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(999L));
+        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(UUID.randomUUID()));
     }
 }

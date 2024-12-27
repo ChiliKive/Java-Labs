@@ -36,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProductById(Long id) {
+    public Product getProductById(UUID id) {
         return products.stream()
             .filter(p -> p.getId().equals(id))
             .findFirst()
@@ -47,11 +47,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Long createProduct(Product product) {
+    public UUID createProduct(Product product) {
         if (products.stream().anyMatch(p -> p.getName().equalsIgnoreCase(product.getName()))) {
             throw new ProductAlreadyExistsException(product.getName());
         }
-        Product newProduct = buildProduct(product.toBuilder().id((long) (products.size() + 1)).build());
+        Product newProduct = buildProduct(product.toBuilder().id(UUID.randomUUID()).build());
         products.add(newProduct);
         return newProduct.getId();
     }
@@ -67,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void deleteProductById(Long productId) {
+    public void deleteProductById(UUID productId) {
         Product product = getProductById(productId);
         products.remove(product);
     }
@@ -86,16 +86,16 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = new ArrayList<>();
 
         Category spaceFood = Category.builder()
-                .id(1L)
+                .id(UUID.fromString("db084cd0-a00a-40af-8f8b-450a7da69d0c"))
                 .name("Space Food Supplies")
                 .build();
         Category cosmicGadgets = Category.builder()
-                .id(2L)
+                .id(UUID.fromString("2aec6e47-eddf-4a84-a100-79ff7156498b"))
                 .name("Cosmic Gadgets")
                 .build();
 
         products.add(Product.builder()
-                .id(1L)
+                .id(UUID.fromString("eca8be53-a619-4490-b88a-5d1e248a687c"))
                 .name("Astronaut Tuna Cans")
                 .description("Premium tuna packed for interstellar expeditions.")
                 .price(20.0)
@@ -104,7 +104,7 @@ public class ProductServiceImpl implements ProductService {
                 .build());
 
         products.add(Product.builder()
-                .id(2L)
+                .id(UUID.fromString("b1875909-062e-4d0c-a762-0ad8c27ad690"))
                 .name("Stellar Laser Pointer")
                 .description("A laser pointer designed for entertaining cosmic pets.")
                 .price(35.0)
@@ -113,7 +113,7 @@ public class ProductServiceImpl implements ProductService {
                 .build());
 
         products.add(Product.builder()
-                .id(3L)
+                .id(UUID.fromString("e4752e9f-5dbb-400d-8d97-d23d69a2a6f1"))
                 .name("Zero-Gravity Pet Suit")
                 .description("Keep your pets safe and stylish in zero gravity.")
                 .price(150.0)

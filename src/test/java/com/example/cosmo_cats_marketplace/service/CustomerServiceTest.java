@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @SpringBootTest
 @DisplayName("Enhanced Customer Service Test")
@@ -19,7 +20,7 @@ public class CustomerServiceTest {
     @Autowired
     private CustomerService customerService;
 
-    private static Long testCustomerId;
+    private static UUID testCustomerId;
     private static final String UPDATED_CUSTOMER_NAME = "Updated Customer Name";
 
     @Test
@@ -72,15 +73,17 @@ public class CustomerServiceTest {
     @Test
     @Order(4)
     void shouldThrowCustomerNotFoundExceptionOnUpdate() {
+        UUID invalidId = UUID.randomUUID();
+
         Customer nonExistentCustomer = Customer.builder()
-                .id(999L)
+                .id(invalidId)
                 .name("Non Existent Customer")
                 .address("Unknown Address")
                 .phone("+1111111111")
                 .email("non.existent@example.com")
                 .build();
 
-        assertThrows(CustomerNotFoundException.class, () -> customerService.updateCustomer(999L, nonExistentCustomer));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.updateCustomer(invalidId, nonExistentCustomer));
     }
 
     @Test
@@ -93,7 +96,7 @@ public class CustomerServiceTest {
     @Test
     @Order(6)
     void shouldThrowCustomerNotFoundExceptionForInvalidId() {
-        assertThrows(CustomerNotFoundException.class, () -> customerService.getCustomerById(999L));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.getCustomerById(UUID.randomUUID()));
     }
 
     @Test

@@ -6,9 +6,9 @@ import java.util.UUID;
 import com.example.cosmo_cats_marketplace.domain.Product;
 
 public interface ProductService {
-    Long createProduct(Product product);
+    UUID createProduct(Product product);
     List<Product> getAllProducts();
-    Product getProductById(Long id);
+    Product getProductById(UUID id);
     void updateProduct(Product product);
-    void deleteProductById(Long productId);
+    void deleteProductById(UUID productId);
 }

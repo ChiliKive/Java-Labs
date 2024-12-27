@@ -1,6 +1,6 @@
-package com.example.cosmo_cats_marketplace.dto.Product;
+package com.example.cosmo_cats_marketplace.dto.product;
 
-import com.example.cosmo_cats_marketplace.dto.Category.CategoryDto;
+import com.example.cosmo_cats_marketplace.dto.category.CategoryDto;
 import com.example.cosmo_cats_marketplace.validation.CosmicWordCheck;
 import com.example.cosmo_cats_marketplace.validation.ExtendedValidation;
 import jakarta.validation.GroupSequence;
@@ -10,15 +10,18 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
+import java.util.UUID;
+
 @Value
-@Builder
+@Builder(toBuilder = true)
 @Jacksonized
-@GroupSequence({ProductDto.class})
+@GroupSequence({ProductDto.class, ExtendedValidation.class})
 public class ProductDto {
+  UUID id;
 
   @NotBlank(message = "Product name is required.")
+  @Size(min = 3, max = 70, message = "Product name must be between 3 and 70 characters.")
   @CosmicWordCheck(groups = ExtendedValidation.class)
-  @Size(min = 3, max = 30, message = "Product name must be between 3 and 30 characters.")
   String name;
 
   @NotBlank(message = "Product description is required.")

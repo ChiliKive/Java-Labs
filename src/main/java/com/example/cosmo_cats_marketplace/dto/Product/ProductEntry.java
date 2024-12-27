@@ -1,4 +1,4 @@
-package com.example.cosmo_cats_marketplace.dto.Product;
+package com.example.cosmo_cats_marketplace.dto.product;
 
 import java.util.UUID;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class ProductEntry {
-  Long id;
+  UUID id;
   String name;
   String description;
   Double price;

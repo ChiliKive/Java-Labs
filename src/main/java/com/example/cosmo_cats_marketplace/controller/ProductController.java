@@ -1,27 +1,19 @@
 package com.example.cosmo_cats_marketplace.controller;
 
-import com.example.cosmo_cats_marketplace.domain.Product;
-import com.example.cosmo_cats_marketplace.dto.Product.ProductDto;
-import com.example.cosmo_cats_marketplace.dto.Product.ProductListDto;
-import com.example.cosmo_cats_marketplace.service.ProductService;
+import com.example.cosmo_cats_marketplace.dto.product.ProductDto;
+import com.example.cosmo_cats_marketplace.dto.product.ProductListDto;
 import com.example.cosmo_cats_marketplace.mapper.ProductMapper;
+import com.example.cosmo_cats_marketplace.service.ProductService;
 import com.example.cosmo_cats_marketplace.validation.ExtendedValidation;
 import jakarta.validation.Valid;
-import java.net.URI;
-import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @Validated(ExtendedValidation.class)
@@ -42,30 +34,29 @@ public class ProductController {
   }
 
   @GetMapping("/{productId}")
-  public ResponseEntity<ProductDto> getProductById(@PathVariable Long productId) {
+  public ResponseEntity<ProductDto> getProductById(@PathVariable UUID productId) {
     ProductDto product = productMapper.toProductDto(productService.getProductById(productId));
     return ResponseEntity.ok(product);
   }
 
   @PostMapping
-  public ResponseEntity<Void> createProduct(@RequestBody @Valid ProductDto productDto) {
-    Long productId = productService.createProduct(productMapper.toProduct(productDto));
-    URI location = URI.create(String.format("/api/v1/products/%d", productId));
-    HttpHeaders headers = new HttpHeaders();
-    headers.setLocation(location);
-    return new ResponseEntity<>(headers, HttpStatus.CREATED);
+  public ResponseEntity<ProductDto> createProduct(@RequestBody @Valid ProductDto productDto) {
+    UUID productId = productService.createProduct(productMapper.toProduct(productDto));
+    ProductDto createdProduct = productMapper.toProductDto(productMapper.toProduct(productDto).toBuilder().id(productId).build());
+    URI location = URI.create(String.format("/api/v1/products/%s", productId));
+    return ResponseEntity.created(location).body(createdProduct);
   }
 
   @PutMapping("/{productId}")
   public ResponseEntity<Void> updateProduct(
-      @PathVariable Long productId,
+      @PathVariable UUID productId,
       @RequestBody ProductDto productDto) {
     productService.updateProduct(productMapper.toProduct(productDto).toBuilder().id(productId).build());
     return ResponseEntity.ok().build();
   }
 
   @DeleteMapping("/{productId}")
-  public ResponseEntity<Void> removeProduct(@PathVariable Long productId) {
+  public ResponseEntity<Void> removeProduct(@PathVariable UUID productId) {
     productService.deleteProductById(productId);
     return ResponseEntity.noContent().build();
   }

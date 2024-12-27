@@ -9,7 +9,7 @@ import lombok.Value;
 @Value
 @Builder(toBuilder = true)
 public class Order {
-    Long id;
+    UUID id;
     Customer customer;
     String status;
     List<Product> products;

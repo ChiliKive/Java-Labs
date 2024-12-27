@@ -1,14 +1,16 @@
 package com.example.cosmo_cats_marketplace.controller;
 
 import com.example.cosmo_cats_marketplace.domain.Customer;
-import com.example.cosmo_cats_marketplace.dto.Customer.CustomerDto;
-import com.example.cosmo_cats_marketplace.dto.Customer.CustomerListDto;
+import com.example.cosmo_cats_marketplace.dto.customer.CustomerDto;
+import com.example.cosmo_cats_marketplace.dto.customer.CustomerListDto;
 import com.example.cosmo_cats_marketplace.mapper.CustomerMapper;
 import com.example.cosmo_cats_marketplace.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @Validated
@@ -29,7 +31,7 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable UUID id) {
         return ResponseEntity.ok(customerMapper.toCustomerDto(customerService.getCustomerById(id)));
     }
 
@@ -41,14 +43,14 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CustomerDto> updateCustomer(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestBody @Valid CustomerDto customerDto) {
         Customer updatedCustomer = customerService.updateCustomer(id, customerMapper.toCustomer(customerDto));
         return ResponseEntity.ok(customerMapper.toCustomerDto(updatedCustomer));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable UUID id) {
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();
     }

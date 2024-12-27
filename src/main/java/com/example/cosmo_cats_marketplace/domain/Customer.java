@@ -3,10 +3,12 @@ package com.example.cosmo_cats_marketplace.domain;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.UUID;
+
 @Value
 @Builder(toBuilder = true)
 public class Customer {
-    Long id;
+    UUID id;
     String name;
     String address;
     String phone;

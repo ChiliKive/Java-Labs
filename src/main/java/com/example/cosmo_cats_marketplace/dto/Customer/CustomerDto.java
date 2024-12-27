@@ -1,4 +1,4 @@
-package com.example.cosmo_cats_marketplace.dto.Customer;
+package com.example.cosmo_cats_marketplace.dto.customer;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -8,10 +8,13 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
+import java.util.UUID;
+
 @Value
-@Builder
+@Builder(toBuilder = true)
 @Jacksonized
 public class CustomerDto {
+  UUID id;
 
   @NotBlank(message = "Please provide a valid customer name.")
   @Size(min = 3, max = 30, message = "Customer name must be between 3 and 30 characters.")
