@@ -82,11 +82,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteProductById(Long productId) {
-        if (!productRepository.existsById(productId)) {
-            throw new ProductNotFoundException(productId);
+        if (productRepository.existsById(productId)) {
+            productRepository.deleteById(productId);
+            log.info("Product with ID {} deleted.", productId);
+        } else {
+            log.warn("Product with ID {} not found for deletion.", productId);
         }
-        productRepository.deleteById(productId);
     }
+
 
     private Product mapToDomain(ProductEntity entity) {
         return Product.builder()
