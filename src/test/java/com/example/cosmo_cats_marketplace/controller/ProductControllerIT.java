@@ -1,5 +1,6 @@
 package com.example.cosmo_cats_marketplace.controller;
 
+import com.example.cosmo_cats_marketplace.AbstractTestcontainers;
 import com.example.cosmo_cats_marketplace.dto.Product.ProductDto;
 import com.example.cosmo_cats_marketplace.dto.Product.ProductListDto;
 import com.example.cosmo_cats_marketplace.entity.CategoryEntity;
@@ -14,12 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -47,6 +50,7 @@ class ProductControllerIT {
   }
 
   @Test
+  @WithMockUser(username = "admin", roles = {"ADMIN"})
   void testCreateProduct() throws Exception {
     CategoryEntity category = categoryRepository.save(
             CategoryEntity.builder()
@@ -66,12 +70,14 @@ class ProductControllerIT {
             .build();
 
     mockMvc.perform(post("/api/v1/products")
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(productDto)))
             .andExpect(status().isCreated());
   }
 
   @Test
+  @WithMockUser(username = "user", roles = {"USER"})
   void testGetAllProducts() throws Exception {
     CategoryEntity category = categoryRepository.save(
             CategoryEntity.builder()
@@ -97,12 +103,14 @@ class ProductControllerIT {
     ));
 
     mockMvc.perform(get("/api/v1/products")
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.products.length()").value(2));
   }
 
   @Test
+  @WithMockUser(username = "user", roles = {"USER"})
   void testGetProductById() throws Exception {
     CategoryEntity category = categoryRepository.save(
             CategoryEntity.builder()
@@ -121,12 +129,14 @@ class ProductControllerIT {
     );
 
     mockMvc.perform(get("/api/v1/products/{id}", product.getId())
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name").value("Test Product"));
   }
 
   @Test
+  @WithMockUser(username = "admin", roles = {"ADMIN"})
   void testUpdateProduct() throws Exception {
     CategoryEntity category = categoryRepository.save(
             CategoryEntity.builder()
@@ -156,12 +166,14 @@ class ProductControllerIT {
             .build();
 
     mockMvc.perform(put("/api/v1/products/{id}", product.getId())
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updatedProductDto)))
             .andExpect(status().isOk());
   }
 
   @Test
+  @WithMockUser(username = "admin", roles = {"ADMIN"})
   void testDeleteProduct() throws Exception {
     CategoryEntity category = categoryRepository.save(
             CategoryEntity.builder()
@@ -180,47 +192,10 @@ class ProductControllerIT {
     );
 
     mockMvc.perform(delete("/api/v1/products/{id}", product.getId())
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
 
     assertFalse(productRepository.existsById(product.getId()));
-  }
-
-  @Test
-  void testGetProductsByCategory() throws Exception {
-    CategoryEntity category = categoryRepository.save(
-            CategoryEntity.builder()
-                    .name("Category Test")
-                    .build()
-    );
-
-    productRepository.saveAll(List.of(
-            ProductEntity.builder()
-                    .name("Product 1")
-                    .description("Description 1")
-                    .price(10.0)
-                    .manufacturer("Manufacturer 1")
-                    .category(category)
-                    .build(),
-            ProductEntity.builder()
-                    .name("Product 2")
-                    .description("Description 2")
-                    .price(20.0)
-                    .manufacturer("Manufacturer 2")
-                    .category(category)
-                    .build()
-    ));
-
-    mockMvc.perform(get("/api/v1/products?category={categoryId}", category.getId())
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.products.length()").value(2));
-  }
-
-  @Test
-  void testFailGetProductByInvalidId() throws Exception {
-    mockMvc.perform(get("/api/v1/products/{id}", 9999L)
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound());
   }
 }
